@@ -1,0 +1,77 @@
+# Builds the core with Quartus 17.0.2 Lite (the same image MiSTer's own nightly builds use) and
+# keeps the .rbf as a build artifact. Every push to main replaces the "unstable" pre-release;
+# publishing a release on GitHub (for example v1.0) builds the core and attaches it to that release.
+name: Build core
+
+on:
+  push:
+    branches: [main]
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  simulate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - name: Simulate the controller reader against modelled controllers
+        run: |
+          sudo apt-get install -y iverilog >/dev/null
+          sh sim/run.sh | tee sim.log
+          grep -q "ALL PASSED" sim.log
+
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile with Quartus
+        run: |
+          docker run --rm -v "$PWD":/project -w /project theypsilon/quartus-lite-c5:17.0.2.docker0 \
+            /opt/intelFPGA_lite/quartus/bin/quartus_sh --flow compile SS1_Controller_Tester.qpf
+          sudo chown -R "$(id -u):$(id -g)" .
+          name="SS1_Controller_Tester_$(date -u +%Y%m%d).rbf"
+          cp output_files/SS1_Controller_Tester.rbf "$name"
+          echo "RBF=$name" >> "$GITHUB_ENV"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SS1_Controller_Tester
+          path: |
+            ${{ env.RBF }}
+            output_files/*.rpt
+            output_files/*.summary
+
+  release:
+    if: github.event_name == 'release'
+    needs: [simulate, build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: SS1_Controller_Tester
+      - name: Attach the core to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${{ github.event.release.tag_name }}" SS1_Controller_Tester_*.rbf --repo "${{ github.repository }}" --clobber
+
+  # every push to main replaces the "unstable" pre-release with the new build, for testing
+  unstable:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [simulate, build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: SS1_Controller_Tester
+      - name: Replace the unstable pre-release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete unstable --repo "${{ github.repository }}" --cleanup-tag -y || true
+          gh release create unstable SS1_Controller_Tester_*.rbf --repo "${{ github.repository }}" --target "${{ github.sha }}" \
+            --prerelease --title "Unstable test build" --notes "Built from ${{ github.sha }}. For testing only."

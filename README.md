@@ -1,0 +1,78 @@
+# SS1 Controller Tester (MiSTer core)
+
+Shows what the PlayStation controllers in the SuperStation One's **front ports 1 and 2** (SNAC)
+are pressing: every button, both analog sticks, and whether there's a memory card in each port.
+
+It's made to be launched by [SS1 Tool](https://github.com/f3bandit/ss1_tool), whose controller
+tester (Diag › Controller tester › SNAC controllers) starts it and shows the controllers live on
+the PC. It also works on its own from MiSTer's menu: load it and it starts reading straight away.
+
+While it runs, nothing you press on the front-port controllers reaches Console Mode or MiSTer's
+menu, so testing never starts a game or changes a setting by accident.
+
+## Using it on its own
+
+1. Copy `SS1_Controller_Tester_<date>.rbf` to `/media/fat/_Utility/` (SS1 Tool's Setup ›
+   Install scripts and cores does this for you).
+2. Load **SS1_Controller_Tester** from the core list.
+3. Plug controllers into front port 1 and/or 2. On a dock, set the SNAC Bypass switch to Disabled.
+
+Menu options:
+
+| Option | What it does |
+|---|---|
+| Report file (SS1 Tool) | The file SS1 Tool reads the controllers from (mounted by SS1 Tool) |
+| Switch pads to analog | On (default): DualShock-type controllers are switched to analog mode so the sticks show. Off: each pad stays in whatever mode it's in |
+| Reset | Starts reading afresh |
+
+## The screen
+
+For each port: the controller type (digital pad, DualShock in analog mode, analog joystick,
+NeGcon, mouse, light gun), the buttons (a pressed button's name lights up green), both sticks
+(0-255, 128 in the middle) and whether there's a memory card (formatted or not). A line at the
+bottom shows the wiring check.
+
+## Analog mode
+
+A DualShock, or a wireless receiver acting as one, starts in digital mode: the left stick works
+as the D-pad and the sticks aren't sent. The core sends it the same commands a game uses to switch
+to analog (enter config `01 43 00 01 00`, analog on `01 44 00 01 02 00 00 00 00`, leave config
+`01 43 00 00 5A 5A 5A 5A 5A`), and again about once a second while it stays digital, for receivers
+whose controller pairs late. A pad that can't do analog just stays digital. The `02` keeps the
+controller's own ANALOG button working.
+
+The PS1 port carries 16 buttons and two sticks; a controller's Home, PS, star or similar buttons
+are used by the controller or its receiver and never reach the port.
+
+## How SS1 Tool reads it
+
+SS1 Tool writes a 512-byte report file and mounts it with an MGL file. The core reads block 0 once
+(the request: `SCTQ` and a 4-byte id at offset 8), then rewrites it about 12 times a second:
+
+| Offset | Report |
+|---|---|
+| 0 | `SCTR` |
+| 4 | version (1) |
+| 8 | the id from the request (4 bytes) |
+| 32 | port 1: port (1), controller there (0/1), its ID (41 digital, 73 DualShock analog...), buttons (16-bit LE, pressed = 1: Select L3 R3 Start Up Right Down Left L2 R2 L1 R1 Triangle Circle Cross Square), RX RY LX LY, reads so far, memory card (0 none, 1 formatted, 2 not formatted), analog mode asked for (0/1) |
+| 44 | analog switches sent so far |
+| 48 | port 2: the same as port 1 (port is 2) |
+| 64 | wiring check: the pins something pulled low (bit n = USER_IN[n]) while reading port 1, port 2 (65), and with USER_OUT[6] as the select (66); a controller answered on USER_OUT[6] (67), its ID (68) |
+
+The ports use the same pins as the PSX core's SNAC: USER_OUT[1] selects port 1, USER_OUT[0]
+port 2, USER_OUT[2] is CMD and USER_OUT[5] CLK; USER_IN[4] is DAT and USER_IN[3] ACK.
+
+## Building
+
+GitHub Actions builds the core with Quartus 17.0.2 Lite on every push (see
+`.github/workflows/build.yml`) after the simulation passes; every push to main replaces the
+"unstable" test build, and publishing a release attaches the core to it. To simulate locally
+(Icarus Verilog):
+
+```
+sh sim/run.sh
+```
+
+## License
+
+GPL-3.0-or-later. `sys/` is MiSTer's standard framework (GPL-2.0-or-later), used by every MiSTer core.
