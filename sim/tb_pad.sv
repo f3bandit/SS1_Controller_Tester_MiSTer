@@ -1,3 +1,6 @@
+// SS1 Controller Tester: test bench
+// Copyright (C) 2026 f3bandit. GPL-3.0-or-later (see LICENSE).
+
 // Testbench for pad_ctrl: two modelled PlayStation controllers, one in each front port (port 1
 // with a memory card), and a stand-in for MiSTer's file transfers (hps_io). Run: sh sim/run.sh
 `timescale 1ns/1ns

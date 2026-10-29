@@ -1,3 +1,6 @@
+// SS1 Controller Tester: test bench
+// Copyright (C) 2026 f3bandit. GPL-3.0-or-later (see LICENSE).
+
 // Renders one frame of the screen to frame.ppm with made-up controller values.
 `timescale 1ns/1ns
 module tb_screen;

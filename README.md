@@ -75,4 +75,6 @@ sh sim/run.sh
 
 ## License
 
+Copyright (C) 2026 f3bandit: the SS1 Controller Tester is f3bandit's idea and design.
+
 GPL-3.0-or-later. `sys/` is MiSTer's standard framework (GPL-2.0-or-later), used by every MiSTer core.
