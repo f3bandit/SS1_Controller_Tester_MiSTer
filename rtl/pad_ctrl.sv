@@ -1,9 +1,6 @@
 // SS1 Controller Tester
 // Copyright (C) 2026 f3bandit
-//
-// This program is free software: you can redistribute it and/or modify it under the terms of
-// the GNU General Public License as published by the Free Software Foundation, either version 3
-// of the License, or (at your option) any later version.
+// MIT License (see LICENSE-MIT).
 //
 // pad_ctrl: reads the controllers in the SuperStation One's front ports 1 and 2 (SNAC).
 //

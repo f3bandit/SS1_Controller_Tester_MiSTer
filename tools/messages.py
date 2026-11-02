@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# SS1 Controller Tester. Copyright (C) 2026 f3bandit. GPL-3.0-or-later (see LICENSE).
+# SS1 Controller Tester. Copyright (C) 2026 f3bandit. MIT License (see LICENSE-MIT).
 """Writes the screen texts: rtl/messages.hex (64 characters per message), rtl/messages.vh (their
 numbers) and rtl/padcols.vh (which button each column lights, and where the numbers go). The
 core's font has capitals, digits and punctuation only."""
