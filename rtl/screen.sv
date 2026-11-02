@@ -1,6 +1,9 @@
 // SS1 Controller Tester
 // Copyright (C) 2026 f3bandit
-// MIT License (see LICENSE-MIT).
+//
+// This program is free software: you can redistribute it and/or modify it under the terms of
+// the GNU General Public License as published by the Free Software Foundation, either version 3
+// of the License, or (at your option) any later version.
 //
 // screen: what the TV shows. 240p, 15 kHz (MiSTer scales it for HDMI): a 64x30 grid of 8x8
 // characters. Port 1 on rows 7-11, port 2 on rows 13-17: the controller type, the buttons
